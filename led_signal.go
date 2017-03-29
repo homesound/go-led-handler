@@ -11,16 +11,26 @@ import (
 	"github.com/gurupras/go-easyfiles"
 )
 
-func GetLedFile(filename string) string {
-	return filepath.Join("/sys/class/leds/led0", filename)
+type LedHandler struct {
+	basePath string
+	onValue  string
+	offValue string
 }
 
-func ReadFile(filepath string) (string, error) {
+func NewRpiZeroLedHandler() *LedHandler {
+	return &LedHandler{"/sys/class/leds/led0", "0", "1"}
+}
+
+func (lh *LedHandler) GetLedFile(filename string) string {
+	return filepath.Join(lh.basePath, filename)
+}
+
+func (lh *LedHandler) ReadFile(filepath string) (string, error) {
 	data, err := ioutil.ReadFile(filepath)
 	return string(data), err
 }
 
-func WriteFile(path string, value string) error {
+func (lh *LedHandler) WriteFile(path string, value string) error {
 	f, err := easyfiles.Open(path, os.O_WRONLY, easyfiles.GZ_FALSE)
 	if err != nil {
 		err = errors.New(fmt.Sprintf("Failed to open file '%v': %v", path, err))
@@ -42,26 +52,26 @@ func WriteFile(path string, value string) error {
 	}
 	return nil
 }
-func LedOn() error {
-	return WriteFile(GetLedFile("brightness"), "0")
+func (lh *LedHandler) LedOn() error {
+	return lh.WriteFile(lh.GetLedFile("brightness"), lh.onValue)
 }
 
-func LedOff() error {
-	return WriteFile(GetLedFile("brightness"), "1")
+func (lh *LedHandler) LedOff() error {
+	return lh.WriteFile(lh.GetLedFile("brightness"), lh.offValue)
 }
 
-func BlinkLed(period time.Duration, duration time.Duration) error {
+func (lh *LedHandler) BlinkLed(period time.Duration, duration time.Duration) error {
 	startTime := time.Now()
 	for {
 		timeNow := time.Now()
 		if timeNow.Sub(startTime) > duration {
 			break
 		} else {
-			if err := LedOn(); err != nil {
+			if err := lh.LedOn(); err != nil {
 				return err
 			}
 			time.Sleep(period)
-			if err := LedOff(); err != nil {
+			if err := lh.LedOff(); err != nil {
 				return err
 			}
 			time.Sleep(period)

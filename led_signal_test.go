@@ -9,11 +9,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func commonTest(require *require.Assertions) {
-	err := WriteFile(GetLedFile("trigger"), "default-on")
+// FIXME: Currently, all of these tests are hard-coded for the raspberry pi
+func commonTest(lh *LedHandler, require *require.Assertions) {
+	err := lh.WriteFile(lh.GetLedFile("trigger"), "default-on")
 	require.Nil(err, "Failed to set trigger to default-on", err)
 
-	data, err := ioutil.ReadFile(GetLedFile("trigger"))
+	data, err := ioutil.ReadFile(lh.GetLedFile("trigger"))
 	require.Nil(err, "Failed to read trigger file", err)
 
 	require.True(strings.Contains(string(data), "[default-on]"), "Did not set trigger to default-on")
@@ -22,18 +23,19 @@ func commonTest(require *require.Assertions) {
 func TestLedOn(t *testing.T) {
 	require := require.New(t)
 
-	commonTest(require)
+	lh := NewRpiZeroLedHandler()
+	commonTest(lh, require)
 
-	err := WriteFile(GetLedFile("brightness"), "1")
+	err := lh.WriteFile(lh.GetLedFile("brightness"), "1")
 	require.Nil(err, "Failed to turn off LED", err)
-	v, err := ReadFile(GetLedFile("brightness"))
+	v, err := lh.ReadFile(lh.GetLedFile("brightness"))
 	require.Nil(err)
 	require.Equal("255", strings.TrimSpace(v))
 
-	err = LedOn()
+	err = lh.LedOn()
 	require.Nil(err, "Failed to turn on LED", err)
 
-	v, err = ReadFile(GetLedFile("brightness"))
+	v, err = lh.ReadFile(lh.GetLedFile("brightness"))
 	require.Nil(err)
 	require.Equal("0", strings.TrimSpace(v))
 }
@@ -41,21 +43,22 @@ func TestLedOn(t *testing.T) {
 func TestLedOff(t *testing.T) {
 	require := require.New(t)
 
-	commonTest(require)
+	lh := NewRpiZeroLedHandler()
+	commonTest(lh, require)
 
-	err := WriteFile(GetLedFile("trigger"), "none")
+	err := lh.WriteFile(lh.GetLedFile("trigger"), "none")
 	require.Nil(err)
 
-	err = WriteFile(GetLedFile("brightness"), "0")
+	err = lh.WriteFile(lh.GetLedFile("brightness"), "0")
 	require.Nil(err, "Failed to turn on LED", err)
-	v, err := ReadFile(GetLedFile("brightness"))
+	v, err := lh.ReadFile(lh.GetLedFile("brightness"))
 	require.Nil(err)
 	require.Equal("0", strings.TrimSpace(v))
 
-	err = LedOff()
+	err = lh.LedOff()
 	require.Nil(err, "Failed to turn off LED", err)
 
-	v, err = ReadFile(GetLedFile("brightness"))
+	v, err = lh.ReadFile(lh.GetLedFile("brightness"))
 	require.Nil(err)
 	require.Equal("255", strings.TrimSpace(v))
 }
@@ -63,8 +66,9 @@ func TestLedOff(t *testing.T) {
 func TestBlinkLed(t *testing.T) {
 	require := require.New(t)
 
-	commonTest(require)
+	lh := NewRpiZeroLedHandler()
+	commonTest(lh, require)
 
-	err := BlinkLed(1*time.Second, 5*time.Second)
+	err := lh.BlinkLed(1*time.Second, 5*time.Second)
 	require.Nil(err, "Failed to blink LED", err)
 }
