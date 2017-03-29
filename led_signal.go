@@ -50,18 +50,22 @@ func LedOff() error {
 	return WriteFile(GetLedFile("brightness"), "1")
 }
 
-func BlinkLed(frequency, durationMillis int) {
-	period := float32(1) / float32(frequency)
-
+func BlinkLed(period time.Duration, duration time.Duration) error {
 	startTime := time.Now()
 	for {
 		timeNow := time.Now()
-		if timeNow.Sub(startTime) > time.Duration(durationMillis)*time.Millisecond {
+		if timeNow.Sub(startTime) > duration {
 			break
 		} else {
-			LedOn()
-			time.Sleep(time.Duration(period) * time.Nanosecond)
-			LedOff()
+			if err := LedOn(); err != nil {
+				return err
+			}
+			time.Sleep(period)
+			if err := LedOff(); err != nil {
+				return err
+			}
+			time.Sleep(period)
 		}
 	}
+	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -57,4 +58,13 @@ func TestLedOff(t *testing.T) {
 	v, err = ReadFile(GetLedFile("brightness"))
 	require.Nil(err)
 	require.Equal("255", strings.TrimSpace(v))
+}
+
+func TestBlinkLed(t *testing.T) {
+	require := require.New(t)
+
+	commonTest(require)
+
+	err := BlinkLed(1*time.Second, 5*time.Second)
+	require.Nil(err, "Failed to blink LED", err)
 }
